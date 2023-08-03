@@ -1,0 +1,32 @@
+volumes:
+  rabbitmq_data:
+  postgres_data:
+
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq-for-bot
+    ports:
+      - ":5672"
+      - ":15672"
+    hostname:
+    environment:
+      - RABBITMQ_DEFAULT_USER=
+      - RABBITMQ_DEFAULT_PASS=
+      - RABBITMQ_DEFAULT_VHOST=
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+  postgres:
+    image: postgres
+    container_name: postgres-for-bot
+    ports:
+      - ":5432"
+    hostname:
+    environment:
+      - POSTGRES_USER=
+      - POSTGRES_PASSWORD=
+      - POSTGRES_DB=
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped

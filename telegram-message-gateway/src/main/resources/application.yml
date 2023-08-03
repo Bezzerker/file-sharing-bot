@@ -1,0 +1,43 @@
+# Настройки сервера
+server:
+  port:
+
+# Данные для инициализации бота
+bot:
+  username:
+  token:
+  creator_user_id:
+
+# Настройка логирования
+logging:
+  level:
+    org.springframework: ERROR
+    org.telegram: ERROR
+    ru.zerrbild: DEBUG
+  pattern:
+    console: "%d %highlight(%5level) %clr(${PID}){magenta} --- [%17.17t] %clr(%-40logger{36}){cyan} :: %clr(%-30.30method){yellow} : %msg%n"
+    file: "%d %5p ${PID} --- [%t] %-60c{1.} : %m%n"
+  file:
+    name: ./logs/telegram-message-gateway.log
+
+# Настройка RabbitMQ
+spring:
+  rabbitmq:
+    host: localhost
+    port:
+    username:
+    password:
+    virtual-host:
+# Названия очередей, обменов и связываний
+rabbitmq:
+  queue:
+    text: text
+    document: document
+    image: image
+    response: response
+  exchange:
+    name: message
+    routing_key:
+      to_text_queue: text
+      to_document_queue: document
+      to_image_queue: image
