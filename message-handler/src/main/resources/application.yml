@@ -1,0 +1,52 @@
+# Настройки сервера
+server:
+  port:
+
+spring:
+  # Настройка RabbitMQ
+  rabbitmq:
+    host: localhost
+    port:
+    username:
+    password:
+    virtual-host:
+  # Настройка соединения с базой данных Postgres
+  datasource:
+    username:
+    password:
+    url:
+  jpa:
+    generate-ddl: true
+    show-sql: true
+
+# Настройка логирования
+logging:
+  level:
+    org.springframework: ERROR
+    org.telegram: ERROR
+    ru.zerrbild: DEBUG
+  pattern:
+    console: "%d %highlight(%5level) %clr(${PID}){magenta} --- [%17.17t] %clr(%-40logger{36}){cyan} :: %clr(%-30.30method){yellow} : %msg%n"
+    file: "%d %5p ${PID} --- [%t] %-60c{1.} : %m%n"
+  file:
+    name: ./logs/message-handler.log
+
+# Названия очередей, обменов и связываний
+rabbitmq:
+  queue:
+    text: text
+    document: document
+    image: image
+    response: response
+  exchange:
+    message:
+      name: message
+      routing_key:
+        to_response_queue: response
+
+# Ссылки для получения информации о файле и его скачивания c серверов Telegram
+telegram:
+  bot_token:
+  uri:
+    file_info: https://api.telegram.org/bot{token}/getFile?file_id={fileId}
+    file_download: https://api.telegram.org/file/bot{token}/{filePath}

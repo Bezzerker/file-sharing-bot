@@ -17,6 +17,8 @@
 
     <modules>
         <module>telegram-message-gateway</module>
+        <module>message-handler</module>
+        <module>data-core</module>
     </modules>
 
     <properties>
