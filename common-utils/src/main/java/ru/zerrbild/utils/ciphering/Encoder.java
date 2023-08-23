@@ -12,6 +12,8 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -57,6 +59,16 @@ public class Encoder {
             log.error(exception.getMessage());
             throw new RuntimeException(exception);
         }
+    }
+
+    public String encodeForUrl(String urlParam, String base64Key) {
+        var ciphertext = encode(urlParam, base64Key);
+        return URLEncoder.encode(ciphertext, StandardCharsets.UTF_8);
+    }
+
+    public String encodeForUrl(Long urlParam, String base64Key) {
+        var ciphertext = encode(urlParam, base64Key);
+        return URLEncoder.encode(ciphertext, StandardCharsets.UTF_8);
     }
 
     private SecretKey base64KeyToSecretKey(String base64Key) {

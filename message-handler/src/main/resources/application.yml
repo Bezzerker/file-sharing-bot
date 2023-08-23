@@ -50,3 +50,10 @@ telegram:
   uri:
     file_info: https://api.telegram.org/bot{token}/getFile?file_id={fileId}
     file_download: https://api.telegram.org/file/bot{token}/{filePath}
+
+link:
+  protocol:
+  address:
+  encryption_key:
+  port:
+    rest_service:

@@ -15,6 +15,7 @@ import ru.zerrbild.exceptions.FileDownloadException;
 import ru.zerrbild.exceptions.JsonKeyNotFoundException;
 import ru.zerrbild.exceptions.ResourceNotFoundException;
 import ru.zerrbild.services.data.DatabaseFileLoaderService;
+import ru.zerrbild.services.message.LinkCreatorService;
 import ru.zerrbild.services.message.MessageManagerService;
 import ru.zerrbild.services.message.NotificationService;
 import ru.zerrbild.services.message.enums.LinkType;
@@ -27,6 +28,7 @@ import ru.zerrbild.services.message.enums.MainCommand;
 public class MessageManagerServiceImpl implements MessageManagerService {
     NotificationService notificationService;
     DatabaseFileLoaderService databaseFileLoader;
+    LinkCreatorService linkCreatorService;
     AnalysisDataDAO analysisDataDAO;
     UserDAO userDAO;
 
@@ -43,7 +45,7 @@ public class MessageManagerServiceImpl implements MessageManagerService {
             case WAITING_FOR_CONFIRMATION -> processUnconfirmedUserCommand(text, user);
             case REGISTERED -> processRegisteredUserCommand(text, user);
         };
-        
+
         notificationService.notifyUser(update, messageForUser);
     }
 
@@ -68,7 +70,8 @@ public class MessageManagerServiceImpl implements MessageManagerService {
             var fileId = (linkType == LinkType.DOC)
                     ? databaseFileLoader.loadDocument(update).getId()
                     : databaseFileLoader.loadImage(update).getId();
-            return String.format("Ваша ссылка на загрузку %s: %s", linkType.getReplyInfo(), "ЗДЕСЬ БУДЕТ ССЫЛКА НА ФАЙЛ с id=" + fileId);
+            var downloadLink = linkCreatorService.createDownloadLink(fileId, linkType);
+            return String.format("Ваша ссылка на загрузку %s: %s", linkType.getReplyInfo(), downloadLink);
         } catch (FileDownloadException | JsonKeyNotFoundException e) {
             log.error(e.getMessage());
             return  "Сожалеем, произошла внутренняя ошибка!";
