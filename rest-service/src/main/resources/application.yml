@@ -1,0 +1,29 @@
+# Настройки сервера
+server:
+  port:
+
+# Настройка логирования
+logging:
+  level:
+    org.springframework: ERROR
+    org.telegram: ERROR
+    ru.zerrbild: DEBUG
+  pattern:
+    console: "%d %highlight(%5level) %clr(${PID}){magenta} --- [%17.17t] %clr(%-40logger{36}){cyan} :: %clr(%-30.30method){yellow} : %msg%n"
+    file: "%d %5p ${PID} --- [%t] %-60c{1.} : %m%n"
+  file:
+    name: ./logs/rest-service.log
+
+# Настройка RabbitMQ
+spring:
+  # Настройка соединения с базой данных Postgres
+  datasource:
+    username:
+    password:
+    url:
+  jpa:
+    generate-ddl: true
+    show-sql: true
+
+link:
+  decryption_key:

@@ -20,6 +20,7 @@
         <module>message-handler</module>
         <module>data-core</module>
         <module>common-utils</module>
+        <module>rest-service</module>
     </modules>
 
     <properties>
