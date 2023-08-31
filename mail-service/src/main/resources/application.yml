@@ -1,0 +1,40 @@
+# Настройки сервера
+server:
+  port:
+
+# Настройка логирования
+logging:
+  level:
+    org.springframework: ERROR
+    ru.zerrbild: DEBUG
+  pattern:
+    console: "%d %highlight(%5level) %clr(${PID}){magenta} --- [%17.17t] %clr(%-40logger{36}){cyan} :: %clr(%-30.30method){yellow} : %msg%n"
+    file: "%d %5p ${PID} --- [%t] %-60c{1.} : %m%n"
+  file:
+    name: ./logs/mail-service.log
+
+# Настройка подключения к электронной почте
+spring:
+  mail:
+    test-connection: true
+    host:
+    protocol:
+    port:
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+
+# Настройка параметров сообщения и отправки
+telegram:
+  bot:
+    name:
+link:
+  protocol:
+  address:
+  port:
+    rest_service:
