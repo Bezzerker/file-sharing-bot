@@ -24,4 +24,9 @@ public class ExceptionControllerAdvice {
     public ResponseEntity<String> handleFileNotFoundException() {
         return ResponseEntity.internalServerError().body("Файл не был найден");
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException() {
+        return ResponseEntity.badRequest().body("Ссылка недействительна!");
+    }
 }
