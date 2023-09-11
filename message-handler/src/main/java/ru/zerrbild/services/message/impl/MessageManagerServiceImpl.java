@@ -15,6 +15,7 @@ import ru.zerrbild.exceptions.FileDownloadException;
 import ru.zerrbild.exceptions.JsonKeyNotFoundException;
 import ru.zerrbild.exceptions.ResourceNotFoundException;
 import ru.zerrbild.services.data.DatabaseFileLoaderService;
+import ru.zerrbild.services.data.UserRegistrationManagementService;
 import ru.zerrbild.services.message.LinkCreatorService;
 import ru.zerrbild.services.message.MessageManagerService;
 import ru.zerrbild.services.message.NotificationService;
@@ -29,6 +30,7 @@ public class MessageManagerServiceImpl implements MessageManagerService {
     NotificationService notificationService;
     DatabaseFileLoaderService databaseFileLoader;
     LinkCreatorService linkCreatorService;
+    UserRegistrationManagementService registrationManagement;
     AnalysisDataDAO analysisDataDAO;
     UserDAO userDAO;
 
@@ -45,7 +47,7 @@ public class MessageManagerServiceImpl implements MessageManagerService {
             case WAITING_FOR_CONFIRMATION -> processUnconfirmedUserCommand(text, user);
             case REGISTERED -> processRegisteredUserCommand(text, user);
         };
-
+        
         notificationService.notifyUser(update, messageForUser);
     }
 
@@ -128,16 +130,8 @@ public class MessageManagerServiceImpl implements MessageManagerService {
             case START -> String.format("""
                     Добро пожаловать, %s!
                     <b>Введите Вашу почту</b> или отмените регистрацию — /cancel""", user.getFirstName());
-            case CANCEL -> {
-                user.setState(UserState.UNREGISTERED);
-                userDAO.save(user);
-                yield "Регистрация отменена!";
-            }
-            default -> {
-                user.setState(UserState.REGISTERED);
-                userDAO.save(user);
-                yield "Регистрация завершена!";
-            }
+            case CANCEL -> registrationManagement.deregister(user);
+            default -> registrationManagement.sendConfirmationLink(user, receivedText);
         };
     }
 
@@ -151,11 +145,7 @@ public class MessageManagerServiceImpl implements MessageManagerService {
             case START -> String.format("""
                     Добро пожаловать, %s!
                     <b>Подтвердите Вашу электронную почту</b> или отмените регистрацию — /cancel""", user.getFirstName());
-            case CANCEL -> {
-                user.setState(UserState.UNREGISTERED);
-                userDAO.save(user);
-                yield "Регистрация отменена!";
-            }
+            case CANCEL -> registrationManagement.deregister(user);
             default -> "В данный момент требуется <b>подтверждение электронной почты</b>, работа бота ограничена!";
         };
     }
@@ -170,12 +160,7 @@ public class MessageManagerServiceImpl implements MessageManagerService {
             case START -> String.format("""
                     Добро пожаловать, %s!
                     Вы <i>зарегистрированы</i> в боте и <b>можете загружать</b> ваши файлы!""", user.getFirstName());
-            case RESET -> {
-                user.setState(UserState.UNREGISTERED);
-                user.setEmail(null);
-                userDAO.save(user);
-                yield "Регистрация сброшена!";
-            }
+            case RESET -> registrationManagement.resetRegistration(user);
             default -> "<b>Недопустимая команда!</b>\nВыполните /help для просмотра доступных команд.";
         };
     }

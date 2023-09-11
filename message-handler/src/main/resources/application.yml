@@ -57,3 +57,4 @@ link:
   encryption_key:
   port:
     rest_service:
+    mail_service:
