@@ -6,4 +6,5 @@ public interface NotificationService {
     void notifyUser(Long chatId, String message);
     void notifyUser(Update update, String message);
     void replyToUser(Update update, String message);
+    void notifyRegistrationCompletion(Long telegramUserId);
 }

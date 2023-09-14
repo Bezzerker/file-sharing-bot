@@ -27,3 +27,7 @@ spring:
 
 link:
   decryption_key:
+  protocol:
+  address:
+  port:
+    message_handler:

@@ -50,4 +50,10 @@ public class NotificationServiceImpl implements NotificationService {
 
         responseProducer.produceResponse(messageExchange, responseRoutingKey, sendMessage);
     }
+
+    @Override
+    public void notifyRegistrationCompletion(Long telegramUserId) {
+        notifyUser(telegramUserId,
+                "<b>Электронный адрес подтвержден!</b>\nМожете отправлять файлы и изображения!");
+    }
 }
