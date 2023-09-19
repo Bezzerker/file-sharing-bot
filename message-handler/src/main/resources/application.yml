@@ -38,12 +38,20 @@ rabbitmq:
     document: document
     image: image
     response: response
+    registrants:
+      name: registrants
+      ttl: 3600000
+    deregister_candidates: deregister_candidates
   exchange:
     message:
       name: message
       routing_key:
         to_response_queue: response
-
+    user:
+      name: user
+      routing_key:
+        to_registrants_queue: registrants
+        to_deregister_candidates_queue: candidates
 # Ссылки для получения информации о файле и его скачивания c серверов Telegram
 telegram:
   bot_token:

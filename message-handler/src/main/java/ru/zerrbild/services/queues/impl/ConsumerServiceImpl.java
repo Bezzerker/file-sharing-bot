@@ -6,6 +6,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.zerrbild.services.message.MessageManagerService;
+import ru.zerrbild.services.data.UserRegistrationManagementService;
 import ru.zerrbild.services.queues.ConsumerService;
 
 @Slf4j
@@ -13,6 +14,7 @@ import ru.zerrbild.services.queues.ConsumerService;
 @Service
 public class ConsumerServiceImpl implements ConsumerService {
     private final MessageManagerService messageManagerService;
+    private final UserRegistrationManagementService registrationManagement;
 
     @Override
     @RabbitListener(queues = "${rabbitmq.queue.text}")
@@ -33,5 +35,12 @@ public class ConsumerServiceImpl implements ConsumerService {
     public void consumeUpdateWithImageMessage(Update update) {
         log.info("Received update containing image from RabbitMQ queue");
         messageManagerService.processImageMessage(update);
+    }
+
+    @Override
+    @RabbitListener(queues = "${rabbitmq.queue.deregister_candidates}")
+    public void consumeDeregisterCandidateId(Long userId) {
+        registrationManagement.deregister(userId);
+        log.info("The user with id = \"{}\" was deregistered because it had been more than an hour since the confirmation link was sent", userId);
     }
 }

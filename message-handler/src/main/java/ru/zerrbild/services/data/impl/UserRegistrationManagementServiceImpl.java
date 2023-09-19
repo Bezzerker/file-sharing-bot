@@ -13,6 +13,8 @@ import org.springframework.web.client.RestTemplate;
 import ru.zerrbild.dao.UserDAO;
 import ru.zerrbild.entities.UserEntity;
 import ru.zerrbild.entities.enums.UserState;
+import ru.zerrbild.services.message.NotificationService;
+import ru.zerrbild.services.queues.ProducerService;
 import ru.zerrbild.services.data.UserRegistrationManagementService;
 import ru.zerrbild.utils.ciphering.Encoder;
 import ru.zerrbild.utils.ciphering.exceptions.IncorrectKeyException;
@@ -22,21 +24,23 @@ import ru.zerrbild.utils.mail.EmailAddresseeData;
 @RequiredArgsConstructor
 @Service
 public class UserRegistrationManagementServiceImpl implements UserRegistrationManagementService {
-    private final Encoder encoder;
-    private final RestTemplate restTemplate;
-    private final UserDAO userDAO;
     @Value("${link.encryption_key}")
     private String encryptionKey;
     @Value("${link.protocol}")
-    String protocol;
+    private String protocol;
     @Value("${link.address}")
-    String address;
+    private String address;
     @Value("${link.port.mail_service}")
-    String mailServicePort;
+    private String mailServicePort;
     @Value("${rabbitmq.exchange.user.name}")
-    String userExchange;
+    private String userExchange;
     @Value("${rabbitmq.exchange.user.routing_key.to_registrants_queue}")
-    String registrantsQueueRoutingKey;
+    private String registrantsQueueRoutingKey;
+    private final Encoder encoder;
+    private final RestTemplate restTemplate;
+    private final UserDAO userDAO;
+    private final ProducerService userProducer;
+    private final NotificationService notificationService;
 
     @Override
     public String sendConfirmationLink(UserEntity user, String userEmail) {
@@ -73,6 +77,16 @@ public class UserRegistrationManagementServiceImpl implements UserRegistrationMa
     }
 
     @Override
+    public void deregister(Long userId) {
+        var existingUser = userDAO.findById(userId);
+        existingUser.filter(user -> user.getState() != UserState.REGISTERED)
+                .ifPresent(user -> {
+                    deregister(user);
+                    notificationService.notifyRegistrationCancellation(user);
+                });
+    }
+
+    @Override
     public String resetRegistration(UserEntity userEntity) {
         userDAO.delete(userEntity);
         return "<b>Регистрация успешно сброшена!</b>\nЧтобы снова использовать бот, введите команду /start";
@@ -100,6 +114,7 @@ public class UserRegistrationManagementServiceImpl implements UserRegistrationMa
         user.setState(UserState.WAITING_FOR_CONFIRMATION);
         user.setEmail(userEmail);
         userDAO.save(user);
+        userProducer.produceRegistrant(userExchange, registrantsQueueRoutingKey, user.getId());
     }
 
     private boolean determineEmailUniqueness(String email) {

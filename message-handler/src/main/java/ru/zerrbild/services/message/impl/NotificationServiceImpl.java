@@ -1,11 +1,12 @@
 package ru.zerrbild.services.message.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import ru.zerrbild.entities.UserEntity;
 import ru.zerrbild.services.message.NotificationService;
 import ru.zerrbild.services.queues.ProducerService;
 
@@ -49,6 +50,13 @@ public class NotificationServiceImpl implements NotificationService {
                 .build();
 
         responseProducer.produceResponse(messageExchange, responseRoutingKey, sendMessage);
+    }
+
+    @Override
+    public void notifyRegistrationCancellation(UserEntity user) {
+        notifyUser(user.getTgUserId(),
+                "Вы не подтвердили Ваш электронный адрес в течение часа — <b>регистрация отменена!</b>" +
+                        "\nОтправьте /help чтобы посмотреть список доступных команд");
     }
 
     @Override

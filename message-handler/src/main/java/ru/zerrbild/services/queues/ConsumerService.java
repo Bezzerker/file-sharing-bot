@@ -6,4 +6,5 @@ public interface ConsumerService {
     void consumeUpdateWithTextMessage(Update update);
     void consumeUpdateWithDocumentMessage(Update update);
     void consumeUpdateWithImageMessage(Update update);
+    void consumeDeregisterCandidateId(Long userId);
 }
