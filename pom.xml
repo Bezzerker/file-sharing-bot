@@ -18,10 +18,10 @@
     <modules>
         <module>telegram-message-gateway</module>
         <module>message-handler</module>
-        <module>rest-service</module>
-        <module>mail-service</module>
         <module>data-core</module>
+        <module>rest-service</module>
         <module>common-utils</module>
+        <module>mail-service</module>
     </modules>
 
     <properties>

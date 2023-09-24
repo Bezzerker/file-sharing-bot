@@ -18,7 +18,7 @@ spring:
   mail:
     test-connection: true
     host:
-    protocol:
+    protocol: smtp
     port:
     username:
     password:
