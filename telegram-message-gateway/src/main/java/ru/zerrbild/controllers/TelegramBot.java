@@ -4,20 +4,19 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-import org.telegram.abilitybots.api.bot.AbilityBot;
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Slf4j
 @Controller
-public class TelegramBot extends AbilityBot {
-    @Value("${bot.creator_user_id}")
-    private long creatorId;
+public class TelegramBot extends TelegramLongPollingBot {
+    @Value("${bot.username}")
+    private String botUsername;
     private final UpdateProcessor updateProcessor;
 
     protected TelegramBot(@Value("${bot.token}") String botToken,
-                          @Value("${bot.username}") String botUsername,
                           UpdateProcessor updateProcessor) {
-        super(botToken, botUsername);
+        super(botToken);
         this.updateProcessor = updateProcessor;
     }
 
@@ -27,8 +26,8 @@ public class TelegramBot extends AbilityBot {
     }
 
     @Override
-    public long creatorId() {
-        return creatorId;
+    public String getBotUsername() {
+        return botUsername;
     }
 
     @Override

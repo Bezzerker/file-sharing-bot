@@ -30,7 +30,7 @@
         <!-- https://mvnrepository.com/artifact/org.telegram/telegrambots-abilities -->
         <dependency>
             <groupId>org.telegram</groupId>
-            <artifactId>telegrambots-abilities</artifactId>
+            <artifactId>telegrambots</artifactId>
         </dependency>
     </dependencies>
 

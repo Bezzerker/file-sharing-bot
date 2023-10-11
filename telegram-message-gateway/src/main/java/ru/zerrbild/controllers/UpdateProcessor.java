@@ -3,11 +3,11 @@ package ru.zerrbild.controllers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.zerrbild.services.UpdateProducerService;
-
-import static org.telegram.abilitybots.api.util.AbilityUtils.getChatId;
 
 @Slf4j
 @Controller
@@ -61,16 +61,37 @@ public class UpdateProcessor {
     }
 
     private void processDocumentMessage(Update update) {
-        telegramBot.silent().send("Получен документ — происходит обработка!", getChatId(update));
+        sendMessageToUser(update, "Получен документ — происходит обработка!");
         messageProducer.produce(exchange, documentQueue, update);
     }
 
     private void processImageMessage(Update update) {
-        telegramBot.silent().send("Получена фотография — происходит обработка!", getChatId(update));
+        sendMessageToUser(update, "Получена фотография — происходит обработка!");
         messageProducer.produce(exchange, imageQueue, update);
     }
 
     private void processOtherTypeOfMessage(Message message) {
-        telegramBot.silent().send("Получен неверный тип сообщения. Убедитесь, что вы отправили текст, фотографию или документ!", message.getChatId());
+        sendMessageToUser(message.getChatId(), """
+            *Получен неверный тип сообщения!*
+            Убедитесь, что вы отправили текст, фотографию или документ!""");
+    }
+
+    private void sendMessageToUser(Update update, String messageText) {
+        var chatId = update.getMessage().getChatId();
+        this.sendMessageToUser(chatId, messageText);
+    }
+
+    private void sendMessageToUser(Long chatId, String messageText) {
+        var sentMessage = SendMessage.builder()
+                .chatId(chatId)
+                .text(messageText)
+                .build();
+        sentMessage.enableMarkdown(true);
+        try {
+            telegramBot.execute(sentMessage);
+        } catch (TelegramApiException apiException) {
+            log.error(apiException.getMessage());
+            throw new RuntimeException(apiException.getMessage());
+        }
     }
 }

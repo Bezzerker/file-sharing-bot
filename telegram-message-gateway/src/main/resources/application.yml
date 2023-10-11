@@ -6,7 +6,6 @@ server:
 bot:
   username:
   token:
-  creator_user_id:
 
 # Настройка логирования
 logging:

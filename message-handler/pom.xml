@@ -29,7 +29,7 @@
 
         <dependency>
             <groupId>org.telegram</groupId>
-            <artifactId>telegrambots-abilities</artifactId>
+            <artifactId>telegrambots</artifactId>
             <version>${telegrambots.version}</version>
         </dependency>
 
