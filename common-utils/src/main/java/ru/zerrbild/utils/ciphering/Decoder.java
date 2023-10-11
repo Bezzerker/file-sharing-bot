@@ -34,7 +34,7 @@ public class Decoder {
         } catch (InvalidKeyException | BadPaddingException | IllegalArgumentException exception) {
             log.error("Ciphertext - {} | Key - {} | {}", ciphertext, base64Key, exception.getMessage());
             throw new IncorrectKeyException(exception);
-        } catch (IllegalBlockSizeException exception) {
+        } catch (IllegalBlockSizeException | ArrayIndexOutOfBoundsException exception) {
             log.error("Ciphertext - {} | Key - {} | {}", ciphertext, base64Key, exception.getMessage());
             throw new IncorrectCiphertextException(exception);
         } catch (NoSuchPaddingException | NoSuchAlgorithmException exception) {

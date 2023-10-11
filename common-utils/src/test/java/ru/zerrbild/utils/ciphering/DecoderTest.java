@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 
 @DisplayName("Unit Test for Decoder")
 @ExtendWith(MockitoExtension.class)
-class DecoderUnitTest {
+class DecoderTest {
     @Mock
     private Encoder encoder;
     private static final String KEY = "wi0vxYpuBFFj6Z2iJLqFWQ==";
@@ -90,6 +90,18 @@ class DecoderUnitTest {
         assertThrows(
                 IncorrectCiphertextException.class,
                 () -> decoder.decodeToString(incorrectCiphertext, KEY)
+        );
+    }
+
+    @Test
+    @DisplayName("Given a ciphertext that causes an array overflow and a key, when decode to string, then throw IncorrectCiphertextException")
+    void decodeToString_shouldThrowIncorrectCiphertextException_whenCiphertextCausesArrayOverflow() {
+        Decoder decoder = new Decoder(defaultAlgorithm);
+        String ciphertextCausingOverflow = "J9HhYVzoJ/UBByPwqpkrEg=";
+
+        assertThrows(
+                IncorrectCiphertextException.class,
+                () -> decoder.decodeToString(ciphertextCausingOverflow, KEY)
         );
     }
 

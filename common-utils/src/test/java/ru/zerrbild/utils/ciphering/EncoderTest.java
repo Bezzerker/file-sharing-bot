@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayName("Unit Test for Encoder")
-class EncoderUnitTest {
+class EncoderTest {
     private static final String KEY = "UWXrwEU1ZrnA4DQZbp5WHA==";
     @ParameterizedTest(name = "Encoding using algorithm - {arguments}")
     @EnumSource(Algorithm.class)

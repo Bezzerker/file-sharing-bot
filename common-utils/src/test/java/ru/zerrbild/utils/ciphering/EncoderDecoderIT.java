@@ -8,7 +8,7 @@ import ru.zerrbild.utils.ciphering.enums.Algorithm;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Integration Tests for Encoder and Decoder")
-class EncoderDecoderIntegrationTest {
+class EncoderDecoderIT {
     @ParameterizedTest(name = "Encoding and decoding using algorithm - {arguments}")
     @EnumSource(Algorithm.class)
     @DisplayName("Given a long number, when encoding and decoding with base64 key, then return the same number")
