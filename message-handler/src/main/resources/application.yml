@@ -55,6 +55,7 @@ rabbitmq:
 # Ссылки для получения информации о файле и его скачивания c серверов Telegram
 telegram:
   bot_token:
+  bot_creator_id:
   uri:
     file_info: https://api.telegram.org/bot{token}/getFile?file_id={fileId}
     file_download: https://api.telegram.org/file/bot{token}/{filePath}

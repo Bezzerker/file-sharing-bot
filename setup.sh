@@ -279,12 +279,11 @@ then
     ## Настройка соединения с Telegram ботом
     sed -i "7s/:.*/: $telegram_bot_username/" $message_gateway_config_path
     sed -i "8s/:.*/: $telegram_bot_token/" $message_gateway_config_path
-    sed -i "9s/:.*/: $telegram_creator_user_id/" $message_gateway_config_path
     ## Настройка соединения с RabbitMQ
-    sed -i "27s/:.*/: $rabbitmq_port/" $message_gateway_config_path
-    sed -i "28s/:.*/: $rabbitmq_user/" $message_gateway_config_path
-    sed -i "29s/:.*/: $rabbitmq_password/" $message_gateway_config_path
-    sed -i "30s/:.*/: $rabbitmq_vhost/" $message_gateway_config_path
+    sed -i "26s/:.*/: $rabbitmq_port/" $message_gateway_config_path
+    sed -i "27s/:.*/: $rabbitmq_user/" $message_gateway_config_path
+    sed -i "28s/:.*/: $rabbitmq_password/" $message_gateway_config_path
+    sed -i "29s/:.*/: $rabbitmq_vhost/" $message_gateway_config_path
 
     # Устанавливаем параметры для микросервиса MessageHandler
     ## Настройка соединения с RabbitMQ
@@ -296,16 +295,17 @@ then
     sed -i "15s/:.*/: $postgres_user/" $message_handler_config_path
     sed -i "16s/:.*/: $postgres_password/" $message_handler_config_path
     sed -i "17s/:.*/: jdbc:postgresql:\/\/localhost:$postgres_port\/$postgres_db/" $message_handler_config_path
-    ## Настройка токена Telegram бота
+    ## Настройка данных Telegram бота
     sed -i "57s/:.*/: $telegram_bot_token/" $message_handler_config_path
+    sed -i "58s/:.*/: $telegram_creator_user_id/" $message_handler_config_path
     ## Задаем параметры адреса, по которому будут загружаться файлы
-    sed -i "63s/:.*/: $protocol/" $message_handler_config_path
-    sed -i "64s/:.*/: $address/" $message_handler_config_path
+    sed -i "64s/:.*/: $protocol/" $message_handler_config_path
+    sed -i "65s/:.*/: $address/" $message_handler_config_path
     ## Задаём ключ шифрования параметров
-    awk -i inplace -v key="$ciphering_key" 'NR==65{$0 = gensub(/:.*/, ": " key, 1)} {print}' "$message_handler_config_path"
+    awk -i inplace -v key="$ciphering_key" 'NR==66{$0 = gensub(/:.*/, ": " key, 1)} {print}' "$message_handler_config_path"
     ## Задаем порты, указывающие на третий и четвёртый микросервисы
-    sed -i "67s/:.*/: $rest_service_port/" $message_handler_config_path
-    sed -i "68s/:.*/: $mail_service_port/" $message_handler_config_path
+    sed -i "68s/:.*/: $rest_service_port/" $message_handler_config_path
+    sed -i "69s/:.*/: $mail_service_port/" $message_handler_config_path
 
     # Устанавливаем параметры для микросервиса Rest Service
     ## Настройка соединения с базой данных Postgres

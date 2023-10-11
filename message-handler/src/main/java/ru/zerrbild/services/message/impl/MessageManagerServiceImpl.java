@@ -1,9 +1,8 @@
 package ru.zerrbild.services.message.impl;
 
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.zerrbild.dao.AnalysisDataDAO;
@@ -23,16 +22,17 @@ import ru.zerrbild.services.message.enums.LinkType;
 import ru.zerrbild.services.message.enums.MainCommand;
 
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 @Service
 public class MessageManagerServiceImpl implements MessageManagerService {
-    NotificationService notificationService;
-    DatabaseFileLoaderService databaseFileLoader;
-    LinkCreatorService linkCreatorService;
-    UserRegistrationManagementService registrationManagement;
-    AnalysisDataDAO analysisDataDAO;
-    UserDAO userDAO;
+    @Value("${telegram.bot_creator_id}")
+    private Long telegramBotCreatorId;
+    private final NotificationService notificationService;
+    private final DatabaseFileLoaderService databaseFileLoader;
+    private final LinkCreatorService linkCreatorService;
+    private final UserRegistrationManagementService registrationManagement;
+    private final AnalysisDataDAO analysisDataDAO;
+    private final UserDAO userDAO;
 
     @Override
     public void processTextMessage(Update update) {
@@ -171,12 +171,22 @@ public class MessageManagerServiceImpl implements MessageManagerService {
 
         var existingUserEntity = userDAO.findByTgUserId(user.getId());
         return existingUserEntity.orElseGet(() -> {
+            var userState = UserState.UNREGISTERED;
+            var receivedUserId = user.getId();
+            if (receivedUserId.equals(telegramBotCreatorId)) {
+                userState = UserState.REGISTERED;
+                notificationService.notifyUser(
+                        user.getId(),
+                        "<b>Вы создатель бота</b> — регистрация не требуется!"
+                );
+            }
+
             UserEntity transientUserEntity = UserEntity.builder()
                     .tgUserId(user.getId())
                     .username(user.getUserName())
                     .firstName(user.getFirstName())
                     .lastName(user.getLastName())
-                    .state(UserState.UNREGISTERED)
+                    .state(userState)
                     .build();
 
             return userDAO.save(transientUserEntity);
