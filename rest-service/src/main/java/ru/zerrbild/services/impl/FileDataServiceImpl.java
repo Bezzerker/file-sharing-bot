@@ -10,6 +10,7 @@ import ru.zerrbild.dao.ImageDAO;
 import ru.zerrbild.entities.BinaryDataEntity;
 import ru.zerrbild.entities.DocumentEntity;
 import ru.zerrbild.entities.ImageEntity;
+import ru.zerrbild.exceptions.RequestedFileNotFoundException;
 import ru.zerrbild.services.FileDataService;
 import ru.zerrbild.utils.ciphering.Decoder;
 
@@ -33,13 +34,17 @@ public class FileDataServiceImpl implements FileDataService {
     @Override
     public DocumentEntity getDocumentByEncryptedId(String encodedId) {
         Long id = decoder.decodeToLong(encodedId, key);
-        return documentDAO.findById(id).orElseThrow();
+        return documentDAO.findById(id)
+                .orElseThrow(() -> new RequestedFileNotFoundException(
+                        String.format("The requested document with id = '%s' is not in the database", id)));
     }
 
     @Override
     public ImageEntity getImageByEncryptedId(String encodedId) {
         Long id = decoder.decodeToLong(encodedId, key);
-        return imageDAO.findById(id).orElseThrow();
+        return imageDAO.findById(id)
+                .orElseThrow(() -> new RequestedFileNotFoundException(
+                        String.format("The requested image with id = '%s' is not in the database", id)));
     }
 
     public InputStreamResource getFileResource(BinaryDataEntity binaryData) {

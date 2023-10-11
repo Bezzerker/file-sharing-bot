@@ -9,6 +9,7 @@ import org.springframework.web.client.RestTemplate;
 import ru.zerrbild.dao.UserDAO;
 import ru.zerrbild.entities.UserEntity;
 import ru.zerrbild.entities.enums.UserState;
+import ru.zerrbild.exceptions.RegisteredUserNotFoundException;
 import ru.zerrbild.services.MailConfirmationService;
 import ru.zerrbild.utils.ciphering.Decoder;
 
@@ -33,7 +34,8 @@ public class MailConfirmationServiceImpl implements MailConfirmationService {
 
         UserEntity existingUser = userDAO.findById(userId)
                 .filter(user -> user.getState() == UserState.WAITING_FOR_CONFIRMATION)
-                .orElseThrow(IllegalArgumentException::new);
+                .orElseThrow(() -> new RegisteredUserNotFoundException(
+                        String.format("User with id = '%s' has already been registered or is missing in the database", userId)));
         existingUser.setState(UserState.REGISTERED);
         userDAO.save(existingUser);
 
