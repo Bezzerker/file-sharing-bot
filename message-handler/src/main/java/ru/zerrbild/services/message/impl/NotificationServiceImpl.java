@@ -13,9 +13,9 @@ import ru.zerrbild.services.queues.ProducerService;
 @RequiredArgsConstructor
 @Service
 public class NotificationServiceImpl implements NotificationService {
-    @Value("${rabbitmq.exchange.message.name}")
+    @Value("${rabbitmq.exchanges.message.name}")
     private String messageExchange;
-    @Value("${rabbitmq.exchange.message.routing_key.to_response_queue}")
+    @Value("${rabbitmq.exchanges.message.queues.response.routing_key}")
     private String responseRoutingKey;
     private final ProducerService responseProducer;
 

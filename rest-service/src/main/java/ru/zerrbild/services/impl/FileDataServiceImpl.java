@@ -25,15 +25,15 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Service
 public class FileDataServiceImpl implements FileDataService {
-    @Value("${link.decryption_key}")
-    private String key;
+    @Value("${ciphering.key}")
+    private String decodingKey;
     private final DocumentDAO documentDAO;
     private final ImageDAO imageDAO;
     private final Decoder decoder;
 
     @Override
     public DocumentEntity getDocumentByEncryptedId(String encodedId) {
-        Long id = decoder.decodeToLong(encodedId, key);
+        Long id = decoder.decodeToLong(encodedId, decodingKey);
         return documentDAO.findById(id)
                 .orElseThrow(() -> new RequestedFileNotFoundException(
                         String.format("The requested document with id = '%s' is not in the database", id)));
@@ -41,7 +41,7 @@ public class FileDataServiceImpl implements FileDataService {
 
     @Override
     public ImageEntity getImageByEncryptedId(String encodedId) {
-        Long id = decoder.decodeToLong(encodedId, key);
+        Long id = decoder.decodeToLong(encodedId, decodingKey);
         return imageDAO.findById(id)
                 .orElseThrow(() -> new RequestedFileNotFoundException(
                         String.format("The requested image with id = '%s' is not in the database", id)));

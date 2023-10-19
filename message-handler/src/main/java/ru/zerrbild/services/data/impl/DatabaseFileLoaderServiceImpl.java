@@ -36,11 +36,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 public class DatabaseFileLoaderServiceImpl implements DatabaseFileLoaderService {
-    @Value("${telegram.uri.file_download}")
+    @Value("${telegram.api_uri.file_download}")
     private String downloadUri;
-    @Value("${telegram.uri.file_info}")
+    @Value("${telegram.api_uri.file_info}")
     private String fileInfoUri;
-    @Value("${telegram.bot_token}")
+    @Value("${telegram.bot.token}")
     private String botToken;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;

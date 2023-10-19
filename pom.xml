@@ -16,7 +16,7 @@
     </parent>
 
     <modules>
-        <module>telegram-message-gateway</module>
+        <module>message-gateway</module>
         <module>message-handler</module>
         <module>data-core</module>
         <module>rest-service</module>
@@ -79,6 +79,7 @@
     </dependencyManagement>
 
     <build>
+        <finalName>application</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

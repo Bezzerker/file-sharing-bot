@@ -10,13 +10,13 @@ import ru.zerrbild.services.MailSenderService;
 import ru.zerrbild.utils.mail.EmailAddresseeData;
 
 @RequiredArgsConstructor
-@RequestMapping("/mail")
+@RequestMapping("/email")
 @RestController
 public class MailController {
     private final MailSenderService mailSenderService;
 
-    @PostMapping("/send")
-    public ResponseEntity<String> sendMessage(@RequestBody EmailAddresseeData addresseeData) {
+    @PostMapping("/verification")
+    public ResponseEntity<String> sendMessageWithConfirmationLink(@RequestBody EmailAddresseeData addresseeData) {
         mailSenderService.sendEmail(addresseeData);
         return ResponseEntity.ok("<b>Сообщение с ссылкой подтверждения было отправлено на почту!</b>\n" +
                                             "Перейдите по ссылке в письме для завершения регистрации!");

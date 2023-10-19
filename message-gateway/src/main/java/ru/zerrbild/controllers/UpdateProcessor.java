@@ -12,13 +12,13 @@ import ru.zerrbild.services.UpdateProducerService;
 @Slf4j
 @Controller
 public class UpdateProcessor {
-    @Value("${rabbitmq.exchange.name}")
-    private String exchange;
-    @Value("${rabbitmq.queue.text}")
+    @Value("${rabbitmq.exchanges.message.name}")
+    private String messageExchange;
+    @Value("${rabbitmq.exchanges.message.queues.text.name}")
     private String textQueue;
-    @Value("${rabbitmq.queue.document}")
+    @Value("${rabbitmq.exchanges.message.queues.document.name}")
     private String documentQueue;
-    @Value("${rabbitmq.queue.image}")
+    @Value("${rabbitmq.exchanges.message.queues.image.name}")
     private String imageQueue;
     private TelegramBot telegramBot;
     private final UpdateProducerService messageProducer;
@@ -57,17 +57,17 @@ public class UpdateProcessor {
     }
 
     private void processTextMessage(Update update) {
-        messageProducer.produce(exchange, textQueue, update);
+        messageProducer.produce(messageExchange, textQueue, update);
     }
 
     private void processDocumentMessage(Update update) {
         sendMessageToUser(update, "Получен документ — происходит обработка!");
-        messageProducer.produce(exchange, documentQueue, update);
+        messageProducer.produce(messageExchange, documentQueue, update);
     }
 
     private void processImageMessage(Update update) {
         sendMessageToUser(update, "Получена фотография — происходит обработка!");
-        messageProducer.produce(exchange, imageQueue, update);
+        messageProducer.produce(messageExchange, imageQueue, update);
     }
 
     private void processOtherTypeOfMessage(Message message) {

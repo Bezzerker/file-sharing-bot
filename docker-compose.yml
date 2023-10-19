@@ -1,32 +1,159 @@
 volumes:
   rabbitmq_data:
   postgres_data:
+  caddy_config:
+  caddy_data:
 
 services:
-  rabbitmq:
-    image: rabbitmq:management
-    container_name: rabbitmq-for-bot
-    ports:
-      - ":5672"
-      - ":15672"
-    hostname:
+  message-gateway:
+    image: message-gateway
+    build:
+      context: .
+      args:
+        - SERVICE_NAME=message-gateway
     environment:
-      - RABBITMQ_DEFAULT_USER=
-      - RABBITMQ_DEFAULT_PASS=
-      - RABBITMQ_DEFAULT_VHOST=
+      - RABBITMQ_HOSTNAME=${RABBITMQ_HOSTNAME}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - MESSAGE_GATEWAY_PORT=${MESSAGE_GATEWAY_PORT}
+      - TELEGRAM_BOT_NAME=${TELEGRAM_BOT_NAME}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    container_name: gateway
+    hostname: ${MESSAGE_GATEWAY_HOSTNAME}
+    expose:
+      - "${MESSAGE_GATEWAY_PORT}"
+    volumes:
+      - ./sharing-bot-logs/docker:/usr/local/message-gateway/sharing-bot-logs
+    depends_on:
+      broker:
+        condition: service_healthy
+    restart: unless-stopped
+  message-handler:
+    image: message-handler
+    build:
+      context: .
+      args:
+        - SERVICE_NAME=message-handler
+    environment:
+      - RABBITMQ_HOSTNAME=${RABBITMQ_HOSTNAME}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_URL=${POSTGRES_URL}
+      - MESSAGE_HANDLER_PORT=${MESSAGE_HANDLER_PORT}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_BOT_CREATOR_ID=${TELEGRAM_BOT_CREATOR_ID}
+      - CIPHERING_KEY=${CIPHERING_KEY}
+      - MAIN_DOMAIN=${MAIN_DOMAIN}
+      - MAIL_SERVICE_HOSTNAME=${MAIL_SERVICE_HOSTNAME}
+      - MAIL_SERVICE_PORT=${MAIL_SERVICE_PORT}
+    container_name: handler
+    hostname: ${MESSAGE_HANDLER_HOSTNAME}
+    expose:
+      - "${MESSAGE_HANDLER_PORT}"
+    volumes:
+      - ./sharing-bot-logs/docker:/usr/local/message-handler/sharing-bot-logs
+    depends_on:
+      broker:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+  rest-service:
+    image: rest-service
+    build:
+      context: .
+      args:
+        - SERVICE_NAME=rest-service
+    environment:
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_URL=${POSTGRES_URL}
+      - REST_SERVICE_PORT=${REST_SERVICE_PORT}
+      - CIPHERING_KEY=${CIPHERING_KEY}
+      - MESSAGE_HANDLER_HOSTNAME=${MESSAGE_HANDLER_HOSTNAME}
+      - MESSAGE_HANDLER_PORT=${MESSAGE_HANDLER_PORT}
+    container_name: endpoints
+    hostname: ${REST_SERVICE_HOSTNAME}
+    expose:
+      - "${REST_SERVICE_PORT}"
+    volumes:
+      - ./sharing-bot-logs/docker:/usr/local/rest-service/sharing-bot-logs
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+  mail-service:
+    image: mail-service
+    build:
+      context: .
+      args:
+        - SERVICE_NAME=mail-service
+    environment:
+      - MAIL_SERVER_HOST=${MAIL_SERVER_HOST}
+      - MAIL_SERVER_PORT=${MAIL_SERVER_PORT}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - MAIL_SERVICE_PORT=${MAIL_SERVICE_PORT}
+      - TELEGRAM_BOT_NAME=${TELEGRAM_BOT_NAME}
+      - MAIN_DOMAIN=${MAIN_DOMAIN}
+    container_name: mail
+    hostname: ${MAIL_SERVICE_HOSTNAME}
+    expose:
+      - "${MAIL_SERVICE_PORT}"
+    volumes:
+      - ./sharing-bot-logs/docker:/usr/local/mail-service/sharing-bot-logs
+    restart: unless-stopped
+  server:
+    image: caddy:2-alpine
+    container_name: caddy
+    environment:
+      - MAIN_DOMAIN=${MAIN_DOMAIN}
+      - REST_SERVICE_HOSTNAME=${REST_SERVICE_HOSTNAME}
+      - REST_SERVICE_PORT=${REST_SERVICE_PORT}
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+  broker:
+    image: rabbitmq:3.12.6-alpine
+    container_name: rabbitmq
+    expose:
+      - "5672"
+    hostname: ${RABBITMQ_HOSTNAME}
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+      - RABBITMQ_DEFAULT_VHOST=file_sharing_bot
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     restart: unless-stopped
-  postgres:
-    image: postgres
-    container_name: postgres-for-bot
-    ports:
-      - ":5432"
-    hostname:
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 6
+  database:
+    image: postgres:15.4-alpine
+    container_name: postgres
+    expose:
+      - "5432"
+    hostname: ${POSTGRES_HOSTNAME}
     environment:
-      - POSTGRES_USER=
-      - POSTGRES_PASSWORD=
-      - POSTGRES_DB=
+      - POSTGRES_USER=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=file_sharing_bot_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+    healthcheck:
+      test: pg_isready -d file_sharing_bot_db
+      interval: 10s
+      timeout: 5s
+      retries: 6
     restart: unless-stopped

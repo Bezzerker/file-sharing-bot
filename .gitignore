@@ -1,7 +1,4 @@
 target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
 ### IntelliJ IDEA ###
 .idea/
@@ -35,4 +32,20 @@ build/
 .DS_Store
 
 ### Logs ###
-logs/
+/sharing-bot-logs/
+
+### Spring Boot Configs ###
+application-dev.yml
+application-prod.yml
+
+### Docker Compose Files ###
+/docker-compose.dev.yml
+/docker-compose.prod.yml
+
+### Caddy Configs ###
+/Caddyfile-dev
+/Caddyfile-prod
+
+### Environment Configs ###
+/prod.env
+/dev.env

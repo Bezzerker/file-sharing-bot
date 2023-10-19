@@ -15,7 +15,7 @@ import ru.zerrbild.services.ResponseConsumerService;
 public class ResponseConsumerServiceImpl implements ResponseConsumerService {
     private final TelegramBot telegramBot;
 
-    @RabbitListener(queues = "${rabbitmq.queue.response}")
+    @RabbitListener(queues = "${rabbitmq.exchanges.message.queues.response.name}")
     public void consume(SendMessage sendMessage) {
         log.info("Received a response for user - {} with the following text: {}",
                 sendMessage.getChatId(), sendMessage.getText());

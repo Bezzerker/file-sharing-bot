@@ -27,7 +27,6 @@
     </dependencies>
 
     <build>
-        <finalName>ciphering</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

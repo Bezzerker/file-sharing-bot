@@ -1,27 +1,14 @@
-# Настройки сервера
-server:
-  port:
-
-# Настройка логирования
-logging:
-  level:
-    org.springframework: ERROR
-    ru.zerrbild: DEBUG
-  pattern:
-    console: "%d %highlight(%5level) %clr(${PID}){magenta} --- [%17.17t] %clr(%-40logger{36}){cyan} :: %clr(%-30.30method){yellow} : %msg%n"
-    file: "%d %5p ${PID} --- [%t] %-60c{1.} : %m%n"
-  file:
-    name: ./logs/mail-service.log
-
-# Настройка подключения к электронной почте
 spring:
+  profiles:
+    active: default
+  # Настройка соединения с почтовым сервером
   mail:
     test-connection: true
-    host:
+    host: ${MAIL_SERVER_HOST}
     protocol: smtp
-    port:
-    username:
-    password:
+    port: ${MAIL_SERVER_PORT}
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -29,12 +16,27 @@ spring:
           ssl:
             enable: true
 
-# Настройка параметров сообщения и отправки
+# Настройки сервера
+server:
+  port: ${MAIL_SERVICE_PORT}
+
+# Название бота, используемое в заголовке электронного письма
 telegram:
   bot:
-    name:
-link:
-  protocol:
-  address:
-  port:
-    rest_service:
+    name: ${TELEGRAM_BOT_NAME}
+
+# Домен сайта с ботом для создания ссылки подтверждения почты
+url_components:
+  main_site:
+    domain: ${MAIN_DOMAIN}
+
+# Настройка логирования
+logging:
+  level:
+    org.springframework: ERROR
+    ru.zerrbild: ERROR
+  pattern:
+    console: "%d %highlight(%5level) %clr(${PID}){magenta} --- [%17.17t] %clr(%-40logger{36}){cyan} :: %clr(%-30.30method){yellow} : %msg%n"
+    file: "%d %5p ${PID} --- [%t] %-60c{1.} : %m%n"
+  file:
+    name: ./sharing-bot-logs/mail-service.log

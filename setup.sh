@@ -4,7 +4,7 @@
 # Функция считывания порта и его проверки на занятость
 used_ports=()
 common=0
-skip_spring_configuration=0
+skip_application_deployment=0
 get_port() {
   local message=$1
   local default_value=$2
@@ -90,16 +90,17 @@ get_string() {
   local default=$2
   while true; do
     read -p "$message" value
-    if [[ -z "$value" ]] && [[ -z "$default" ]]
+    if [[ -z $value ]]
     then
-      echo "Вы не ввели данные, повторите попытку!"
-    else
-      if [[ -n "$default" ]]
+      if [[ -n $default ]]
       then
         common=$default
         echo "Установлено значение по умолчанию - $default"
         break
+      else
+        echo "Вы не ввели данные, повторите попытку!"
       fi
+    else
       common=$value
       break;
     fi
@@ -111,18 +112,14 @@ get_string() {
 goodbye() {
   echo
   echo
-  echo "Остановка скрипта. Завершение всех процессов..."
-
-  if [[ $(find -type f -name "nohup.out") ]]
-  then
-    rm nohup.out
-  fi
+  echo "Завершение работы скрипта..."
 
   exit 1
 }
 
 # Устанавливаем обработчик сигнала SIGINT (Ctrl+C) для вызова функции cleanup
 trap goodbye SIGINT
+
 
 ############# Основная часть скрипта #############
 echo "**************| Конфигурирование и запуск File Sharing Bot |**************"
@@ -133,6 +130,7 @@ echo "  INFO: Если в скобках для параметра указан�
 echo
 echo "  INFO: Для завершения работы скрипта нажмите комбинацию CTRL + C"
 
+
 echo
 echo "--------------------| Параметры контейнера RabbitMQ |--------------------"
 echo
@@ -142,34 +140,23 @@ then
   echo
   counter=1
 
-  get_string "$counter. Введите hostname для RabbitMQ (по умолчанию rabbitmq): " "rabbitmq"
+  get_string "$counter. Введите hostname для RabbitMQ (по умолчанию broker): " "broker"
   rabbitmq_hostname=$common
 
-  get_port "$counter. Введите порт взаимодействия с RabbitMQ (по умолчанию 5672): " 5672
-  rabbitmq_port=$common
+  get_string "$counter. Введите имя пользователя для доступа к RabbitMQ (по умолчанию rabbit): " "rabbit"
+  rabbitmq_username=$common
 
-  get_port "$counter. Введите порт управления RabbitMQ (по умолчанию 15672): " 15672
-  rabbitmq_management_port=$common
-
-  get_string "$counter. Введите имя пользователя для доступа к веб-интерфейсу RabbitMQ (по умолчанию rabbit): " "rabbit"
-  rabbitmq_user=$common
-
-  get_string "$counter. Введите пароль для доступа к веб-интерфейсу RabbitMQ (по умолчанию rabbit): " "rabbit"
+  get_string "$counter. Введите пароль для доступа к RabbitMQ (по умолчанию rabbit): " "rabbit"
   rabbitmq_password=$common
 
-  get_string "$counter. Введите имя virtual host для RabbitMQ (по умолчанию file_sharing_bot): " "file_sharing_bot"
-  rabbitmq_vhost=$common
-
-  # Замена портов и параметров в docker-compose.yml для контейнера rabbitmq
-  sed -i "12s/:.*/: $rabbitmq_hostname/" ./docker-compose.yml
-  sed -i "10s/[0-9]*:/$rabbitmq_port:/" ./docker-compose.yml
-  sed -i "11s/[0-9]*:/$rabbitmq_management_port:/" ./docker-compose.yml
-  sed -i "14s/=.*/=$rabbitmq_user/" ./docker-compose.yml
-  sed -i "15s/RABBITMQ_DEFAULT_PASS=.*/RABBITMQ_DEFAULT_PASS=$rabbitmq_password/" ./docker-compose.yml
-  sed -i "16s/RABBITMQ_DEFAULT_VHOST=.*/RABBITMQ_DEFAULT_VHOST=$rabbitmq_vhost/" ./docker-compose.yml
+  # Инициализация параметров контейнера с брокером сообщений RabbitMQ
+  sed -i "s/RABBITMQ_HOSTNAME=.*/RABBITMQ_HOSTNAME=$rabbitmq_hostname/" ./docker.env
+  sed -i "s/RABBITMQ_USERNAME=.*/RABBITMQ_USERNAME=$rabbitmq_username/" ./docker.env
+  sed -i "s/RABBITMQ_PASSWORD=.*/RABBITMQ_PASSWORD=$rabbitmq_password/" ./docker.env
 else
-  skip_spring_configuration=1
+  skip_application_deployment=1
 fi
+
 
 echo
 echo "--------------------| Параметры контейнера PostgreSQL |--------------------"
@@ -180,213 +167,202 @@ then
   echo
   counter=1
 
-  get_string "$counter. Введите hostname для PostgreSQL (по умолчанию postgres): " "postgres"
+  get_string "$counter. Введите hostname для PostgreSQL (по умолчанию database): " "database"
   postgres_hostname=$common
 
-  get_port "$counter. Введите порт взаимодействия с PostgreSQL (по умолчанию 5432): " 5432
-  postgres_port=$common
-
   get_string "$counter. Введите имя пользователя для доступа к базе данных PostgreSQL (по умолчанию postgres): " "postgres"
-  postgres_user=$common
+  postgres_username=$common
 
   get_string "$counter. Введите пароль для доступа к базе данных PostgreSQL (по умолчанию postgres): " "postgres"
   postgres_password=$common
 
-  get_string "$counter. Введите название базы данных PostgreSQL (по умолчанию file_sharing_bot_db): " "file_sharing_bot_db"
-  postgres_db=$common
-
-  # Замена портов и параметров в docker-compose.yml для контейнера postgres
-  sed -i "25s/hostname:.*/hostname: $postgres_hostname/" ./docker-compose.yml
-  sed -i "s/[0-9]*:5432/$postgres_port:5432/" ./docker-compose.yml
-  sed -i "s/POSTGRES_USER=.*/POSTGRES_USER=$postgres_user/" ./docker-compose.yml
-  sed -i "s/POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$postgres_password/" ./docker-compose.yml
-  sed -i "s/POSTGRES_DB=.*/POSTGRES_DB=$postgres_db/" ./docker-compose.yml
+  # Инициализация параметров контейнера с базой данных PostgreSQL
+  sed -i "s/POSTGRES_HOSTNAME=.*/POSTGRES_HOSTNAME=$postgres_hostname/" ./docker.env
+  sed -i "s/POSTGRES_URL=.*/POSTGRES_URL=jdbc:postgresql:\/\/$postgres_hostname:5432\/file_sharing_bot_db/" ./docker.env
+  sed -i "s/POSTGRES_USERNAME=.*/POSTGRES_USERNAME=$postgres_username/" ./docker.env
+  sed -i "s/POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$postgres_password/" ./docker.env
 else
-  skip_spring_configuration=1
+  skip_application_deployment=1
 fi
+
+
+echo
+echo "--------------------| Параметры соединения с почтовым сервером |--------------------"
+echo
+get_answer "Хотите ли выполнить конфигурирование параметров для связи с почтовым сервером?" 1 0
+if [ "$common" = 1 ]
+then
+  echo
+  counter=1
+
+  get_string "$counter. Введите SMTP адрес почтового сервера (например, smtp.example.com): "
+  mail_server_host=$common
+
+  get_number "$counter. Укажите порт для подключения к почтовому серверу по SMTP (например, 465): "
+  mail_server_port=$common
+
+  get_string "$counter. Укажите ваш адрес электронной почты (например, bot@example.com): "
+  email_username=$common
+
+  get_string "$counter. Укажите пароль от вашей электронной почты: "
+  email_password=$common
+
+  # Инициализация параметров для связи с почтовым сервером
+  sed -i "s/MAIL_SERVER_HOST=.*/MAIL_SERVER_HOST=$mail_server_host/" ./docker.env
+  sed -i "s/MAIL_SERVER_PORT=.*/MAIL_SERVER_PORT=$mail_server_port/" ./docker.env
+  sed -i "s/EMAIL_USERNAME=.*/EMAIL_USERNAME=$email_username/" ./docker.env
+  sed -i "s/EMAIL_PASSWORD=.*/EMAIL_PASSWORD=$email_password/" ./docker.env
+else
+  skip_application_deployment=1
+fi
+
+
+echo
+echo "--------------------| Параметры соединения с Telegram Bot |--------------------"
+echo
+get_answer "Хотите ли выполнить конфигурирование параметров для связи с Telegram ботом?" 1 0
+if [ "$common" = 1 ]
+then
+  echo
+  counter=1
+
+  get_string "$counter. Введите имя вашего бота, созданного через @BotFather (например example_bot): "
+  telegram_bot_name=$common
+
+  get_string "$counter. Введите токен бота, выданный в @BotFather: "
+  telegram_bot_token=$common
+
+  get_number "$counter. Введите ваш уникальный идентификатор (user id можно узнать через @getmyid_bot): "
+  telegram_bot_creator_id=$common
+
+  # Параметры соединения с телеграм ботом
+  sed -i "s/TELEGRAM_BOT_NAME=.*/TELEGRAM_BOT_NAME=$telegram_bot_name/" ./docker.env
+  sed -i "s/TELEGRAM_BOT_TOKEN=.*/TELEGRAM_BOT_TOKEN=$telegram_bot_token/" ./docker.env
+  sed -i "s/TELEGRAM_BOT_CREATOR_ID=.*/TELEGRAM_BOT_CREATOR_ID=$telegram_bot_creator_id/" ./docker.env
+else
+  skip_application_deployment=1
+fi
+
+
+echo
+echo "--------------------| Доменное имя сайта, на котором будет развернут бот |--------------------"
+echo
+get_answer "Хотите ли вы установить доменное сайта?" 1 0
+if [ "$common" = 1 ]
+then
+  echo
+  counter=1
+
+  get_string "$counter. Введите доменное имя вашего сайта для загрузки файлов (по умолчанию bot.localhost): " "bot.localhost"
+  main_domain=$common
+
+  # Инициализация доменного имени сайта
+  sed -i "s/MAIN_DOMAIN=.*/MAIN_DOMAIN=$main_domain/" ./docker.env
+
+  # Добавляем / убираем строки, отвечающие за выбор центра сертификации Let's Ecnrypt
+  if [ $(echo "$main_domain" | grep -E "\.(af|by|cu|er|gn|ir|kp|lr|ru|ss|sy|zw)$") ]
+  then
+      sed -i "17s/.*/    tls {/" ./Caddyfile
+      sed -i "18s/.*/        ca https:\/\/acme-v02.api.letsencrypt.org\/directory/" ./Caddyfile
+      sed -i "19s/.*/    }/" ./Caddyfile
+  else
+      sed -i "17s/.*/    # tls {/" ./Caddyfile
+      sed -i "18s/.*/    #     ca https:\/\/acme-v02.api.letsencrypt.org\/directory/" ./Caddyfile
+      sed -i "19s/.*/    # }/" ./Caddyfile
+  fi
+else
+  skip_application_deployment=1
+fi
+
 
 echo
 echo "--------------------| Параметры Spring Boot микросервисов |--------------------"
 echo
-
-if [ "$skip_spring_configuration" = 0 ]
+get_answer "Хотите ли выполнить конфигурирование Spring Boot микросервисов?" 1 0
+if [ "$common" = 1 ]
 then
-  get_answer "Хотите ли выполнить конфигурирование Spring Boot микросервисов?" 1 0
+  echo
+  counter=1
+
+  get_port "$counter. Введите порт для микросервиса message-gateway (по умолчанию 9781): " 9781
+  message_gateway_port=$common
+
+  get_port "$counter. Введите порт для микросервиса message-handler (по умолчанию 9782): " 9782
+  message_handler_port=$common
+
+  get_port "$counter. Введите порт для микросервиса rest-service (по умолчанию 9783): " 9783
+  rest_service_port=$common
+
+  get_port "$counter. Введите порт для микросервиса mail-service (по умолчанию 9784): " 9784
+  mail_service_port=$common
+
+  get_string "$counter. Введите hostname для контейнера message-gateway (по умолчанию gateway): " "gateway"
+  message_gateway_hostname=$common
+
+  get_string "$counter. Введите hostname для контейнера message-handler (по умолчанию handler): " "handler"
+  message_handler_hostname=$common
+
+  get_string "$counter. Введите hostname для контейнера rest-service (по умолчанию rest): " "rest"
+  rest_service_hostname=$common
+
+  get_string "$counter. Введите hostname для контейнера mail-service (по умолчанию mail): " "mail"
+  mail_service_hostname=$common
+
+  # Инициализация портов контейнеров с микросервисами
+  sed -i "s/MESSAGE_GATEWAY_PORT=.*/MESSAGE_GATEWAY_PORT=$message_gateway_port/" ./docker.env
+  sed -i "s/MESSAGE_HANDLER_PORT=.*/MESSAGE_HANDLER_PORT=$message_handler_port/" ./docker.env
+  sed -i "s/REST_SERVICE_PORT=.*/REST_SERVICE_PORT=$rest_service_port/" ./docker.env
+  sed -i "s/MAIL_SERVICE_PORT=.*/MAIL_SERVICE_PORT=$mail_service_port/" ./docker.env
+  # Инициализация названий хостов контейнеров с микросервисами
+  sed -i "s/MESSAGE_GATEWAY_HOSTNAME=.*/MESSAGE_GATEWAY_HOSTNAME=$message_gateway_hostname/" ./docker.env
+  sed -i "s/MESSAGE_HANDLER_HOSTNAME=.*/MESSAGE_HANDLER_HOSTNAME=$message_handler_hostname/" ./docker.env
+  sed -i "s/REST_SERVICE_HOSTNAME=.*/REST_SERVICE_HOSTNAME=$rest_service_hostname/" ./docker.env
+  sed -i "s/MAIL_SERVICE_HOSTNAME=.*/MAIL_SERVICE_HOSTNAME=$mail_service_hostname/" ./docker.env
+
+  # Генерация ключа шифрования
+  echo
+  echo "Генерирую ключ шифрования параметров запросов, придется немного подождать..."
+  echo
+  docker build -q -t keygen --build-arg SERVICE_NAME=common-utils .
+  ciphering_key=$(docker run --rm keygen)
+
+  # Инициализация ключа шифрования
+  sed -i "s/CIPHERING_KEY=.*/CIPHERING_KEY=${ciphering_key////'\'/}/" ./docker.env
+  echo
+  echo "Ключ шифрования параметров был успешно установлен"
+else
+  skip_application_deployment=1
+fi
+
+
+echo
+echo "--------------------| Запуск всех сервисов |--------------------"
+echo
+get_answer "Хотите ли вы запустить приложение?" 1 0
+if [ "$common" = 1 ]
+then
+  if [ "$skip_application_deployment" = 1 ]
+  then
+    get_answer "Не все параметры были заданы! Вы все равно хотите запустить приложение?" 1 0
+  fi
+
   if [ "$common" = 1 ]
   then
-    echo
-    counter=1
-
-    get_port "$counter. Введите порт для первого микросервиса: "
-    message_gateway_port=$common
-
-    get_port "$counter. Введите порт для второго микросервиса: "
-    message_handler_port=$common
-
-    get_port "$counter. Введите порт для третьего микросервиса: "
-    rest_service_port=$common
-
-    get_port "$counter. Введите порт для четвертого микросервиса: "
-    mail_service_port=$common
-
-    get_string "$counter. Введите имя вашего бота, созданного через @BotFather (например some_bot): "
-    telegram_bot_username=$common
-
-    get_string "$counter. Введите токен вашего бота, указанный в @BotFather: "
-    telegram_bot_token=$common
-
-    get_number "$counter. Введите ваш user id администратора (можно узнать через @getmyid_bot): "
-    telegram_creator_user_id=$common
-
-    get_answer "$counter. Будет ли ваш сайт для загрузки файлов использовать HTTPS?" "https" "http"
-    protocol=$common
-
-    get_string "$counter. Введите доменное имя вашего сайта для загрузки файлов (например, example.com): "
-    address=$common
-
-    get_string "$counter. Введите адрес почтового сервера (например, smtp.example.com): "
-    mail_host=$common
-
-    get_number "$counter. Укажите порт для подключения по SMTP (например, 465): "
-    mail_port=$common
-
-    get_string "$counter. Укажите ваш адрес электронной почты (например, bot@example.com): "
-    mail_username=$common
-
-    get_string "$counter. Укажите пароль от вашей электронной почты: "
-    mail_password=$common
-
-    # Получаем ключ для шифрования параметров (указывается в application.yml)
-    echo 
-    echo "Устанавливаю ключ шифрования..."
-    ./mvnw clean package -pl common-utils -DskipTests=true -q
-    ciphering_key=$(java -jar ./common-utils/target/ciphering.jar)
-
-    # Пути до конфигурационных файлов Spring Boot для всех микросервисов
-    message_gateway_config_path="./telegram-message-gateway/src/main/resources/application.yml"
-    message_handler_config_path="./message-handler/src/main/resources/application.yml"
-    rest_service_config_path="./rest-service/src/main/resources/application.yml"
-    mail_service_config_path="./mail-service/src/main/resources/application.yml"
-
-    # Замена параметров в конфигурационных файлов Spring для микросервисов
-    # Настройка портов микросервисов:
-    sed -i "3s/:.*/: $message_gateway_port/" $message_gateway_config_path
-    sed -i "3s/:.*/: $message_handler_port/" $message_handler_config_path
-    sed -i "3s/:.*/: $rest_service_port/" $rest_service_config_path
-    sed -i "3s/:.*/: $mail_service_port/" $mail_service_config_path
-
-    # Устанавливаем параметры для микросервиса MessageGateway
-    ## Настройка соединения с Telegram ботом
-    sed -i "7s/:.*/: $telegram_bot_username/" $message_gateway_config_path
-    sed -i "8s/:.*/: $telegram_bot_token/" $message_gateway_config_path
-    ## Настройка соединения с RabbitMQ
-    sed -i "26s/:.*/: $rabbitmq_port/" $message_gateway_config_path
-    sed -i "27s/:.*/: $rabbitmq_user/" $message_gateway_config_path
-    sed -i "28s/:.*/: $rabbitmq_password/" $message_gateway_config_path
-    sed -i "29s/:.*/: $rabbitmq_vhost/" $message_gateway_config_path
-
-    # Устанавливаем параметры для микросервиса MessageHandler
-    ## Настройка соединения с RabbitMQ
-    sed -i "9s/:.*/: $rabbitmq_port/" $message_handler_config_path
-    sed -i "10s/:.*/: $rabbitmq_user/" $message_handler_config_path
-    sed -i "11s/:.*/: $rabbitmq_password/" $message_handler_config_path
-    sed -i "12s/:.*/: $rabbitmq_vhost/" $message_handler_config_path
-    ## Настройка соединения с базой данных Postgres
-    sed -i "15s/:.*/: $postgres_user/" $message_handler_config_path
-    sed -i "16s/:.*/: $postgres_password/" $message_handler_config_path
-    sed -i "17s/:.*/: jdbc:postgresql:\/\/localhost:$postgres_port\/$postgres_db/" $message_handler_config_path
-    ## Настройка данных Telegram бота
-    sed -i "57s/:.*/: $telegram_bot_token/" $message_handler_config_path
-    sed -i "58s/:.*/: $telegram_creator_user_id/" $message_handler_config_path
-    ## Задаем параметры адреса, по которому будут загружаться файлы
-    sed -i "64s/:.*/: $protocol/" $message_handler_config_path
-    sed -i "65s/:.*/: $address/" $message_handler_config_path
-    ## Задаём ключ шифрования параметров
-    awk -i inplace -v key="$ciphering_key" 'NR==66{$0 = gensub(/:.*/, ": " key, 1)} {print}' "$message_handler_config_path"
-    ## Задаем порты, указывающие на третий и четвёртый микросервисы
-    sed -i "68s/:.*/: $rest_service_port/" $message_handler_config_path
-    sed -i "69s/:.*/: $mail_service_port/" $message_handler_config_path
-
-    # Устанавливаем параметры для микросервиса Rest Service
-    ## Настройка соединения с базой данных Postgres
-    sed -i "21s/:.*/: $postgres_user/" $rest_service_config_path
-    sed -i "22s/:.*/: $postgres_password/" $rest_service_config_path
-    sed -i "23s/:.*/: jdbc:postgresql:\/\/localhost:$postgres_port\/$postgres_db/" $rest_service_config_path
-    ## Задаём ключ шифрования параметров
-    awk -i inplace -v key="$ciphering_key" 'NR==29{$0 = gensub(/:.*/, ": " key, 1)} {print}' "$rest_service_config_path"
-    ## Задаем параметры адреса, по которому будут загружаться файлы
-    sed -i "30s/:.*/: $protocol/" $rest_service_config_path
-    sed -i "31s/:.*/: $address/" $rest_service_config_path
-    ## Задаем порт, указывающий на второй микросервис
-    sed -i "33s/:.*/: $message_handler_port/" $rest_service_config_path
-
-    # Устанавливаем параметры для микросервиса Mail Service
-    ## Настройка соединения с почтовым сервером
-    sed -i "20s/:.*/: $mail_host/" $mail_service_config_path
-    sed -i "22s/:.*/: $mail_port/" $mail_service_config_path
-    sed -i "23s/:.*/: $mail_username/" $mail_service_config_path
-    sed -i "24s/:.*/: $mail_password/" $mail_service_config_path
-    ## Задаем имя бота
-    sed -i "35s/:.*/: $telegram_bot_username/" $mail_service_config_path
-    ## Задаем настройки для создания ссылок и порт Rest Service
-    sed -i "37s/:.*/: $protocol/" $mail_service_config_path
-    sed -i "38s/:.*/: $address/" $mail_service_config_path
-    sed -i "40s/:.*/: $rest_service_port/" $mail_service_config_path
+    docker compose --env-file ./docker.env down -v
+    docker rmi -f message-gateway message-handler rest-service mail-service
+    docker compose --env-file ./docker.env up -d
 
     echo
-    echo "Установлен ключ шифрования параметров: $ciphering_key"
+    echo "ПРИЛОЖЕНИЕ ЗАПУЩЕНО!"
+    echo
+    echo "Для остановки всех сервисов (приложения) необходимо выполнить одну из написанных ниже команд."
+    echo "Команда 1: docker compose --env-file ./docker.env stop"
+    echo "Команда 2: docker stop gateway handler endpoints mail caddy rabbitmq postgres"
   fi
 else
-  echo "Конфигурирование Spring Boot микросервисов было пропущено, потому что не были настроены контейнеры DOCKER"
-fi
-
-echo
-echo "--------------------| Инициализация Docker контейнеров |--------------------"
-echo
-
-#Поднимаем контейнеры
-get_answer "Поднять docker-контейнеры для PostgreSQL и RabbitMQ?" 1 0
-if [ "$common" = 1 ]
-then
-    echo
-    docker compose down -v
-    echo "Удалены старые контейнеры и соответствующие volume"
-    echo
-    docker compose up --build --detach
-
-    echo
-    echo "DOCKER КОНТЕЙНЕРЫ БЫЛИ ЗАПУЩЕНЫ!"
-else
-    echo
-    echo "КОНФИГУРАЦИЯ ПРИЛОЖЕНИЯ УСПЕШНО БЫЛА НАСТРОЕНА!"
-fi
-
-echo
-echo "--------------------| Запуск Spring Boot микросервисов |--------------------"
-echo
-#Запускаем микросервисы
-get_answer "Запустить приложение (микросервисы)?" 1 0
-if [ "$common" = 1 ]
-then
-    echo "Собираю приложение..."
-    ./mvnw clean package -DskipTests=true -q
-
-    echo
-    echo "ПРИЛОЖЕНИЕ FILE SHARING BOT ЗАПУЩЕНО!"
-    echo
-
-    gateway=$(find ./telegram-message-gateway -type f -name "*.jar")
-    java -jar "$gateway" &
-
-    handler=$(find ./message-handler -type f -name "*.jar")
-    nohup java -jar "$handler" &
-
-    rest=$(find ./rest-service -type f -name "*.jar")
-    nohup java -jar "$rest" &
-
-    mail=$(find ./mail-service -type f -name "*.jar")
-    nohup java -jar "$mail"
-else
-    echo
-    echo "ВСЁ ГОТОВО К ЗАПУСКУ, ПОКА!"
+  echo
+  echo "КОНФИГУРАЦИЯ ПРИЛОЖЕНИЯ УСПЕШНО БЫЛА НАСТРОЕНА!"
+  echo
+  echo "Для запуска приложения вы должны выполнить написанную ниже команду."
+  echo "Команда: docker compose --env-file ./docker.env up -d"
 fi

@@ -1,0 +1,50 @@
+spring:
+  profiles:
+    active: default
+  # Настройка соединения с RabbitMQ
+  rabbitmq:
+    host: ${RABBITMQ_HOSTNAME}
+    port: 5672
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: file_sharing_bot
+
+# Настройки сервера
+server:
+  port: ${MESSAGE_GATEWAY_PORT}
+
+# Данные для инициализации бота
+bot:
+  name: ${TELEGRAM_BOT_NAME}
+  token: ${TELEGRAM_BOT_TOKEN}
+
+# Настройка логирования
+logging:
+  level:
+    org.springframework: ERROR
+    org.telegram: ERROR
+    ru.zerrbild: ERROR
+  pattern:
+    console: "%d %highlight(%5level) %clr(${PID}){magenta} --- [%17.17t] %clr(%-40logger{36}){cyan} :: %clr(%-30.30method){yellow} : %msg%n"
+    file: "%d %5p ${PID} --- [%t] %-60c{1.} : %m%n"
+  file:
+    name: ./sharing-bot-logs/message-gateway.log
+
+# Названия очередей, обменов и связываний
+rabbitmq:
+  exchanges:
+    message:
+      name: message
+      queues:
+        text:
+          name: text
+          routing_key: text
+        document:
+          name: document
+          routing_key: document
+        image:
+          name: image
+          routing_key: image
+        response:
+          name: response
+          routing_key: response

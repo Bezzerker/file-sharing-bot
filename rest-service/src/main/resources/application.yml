@@ -1,33 +1,34 @@
+spring:
+  profiles:
+    active: default
+  # Настройка соединения с базой данных Postgres
+  datasource:
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+    url: ${POSTGRES_URL}
+
 # Настройки сервера
 server:
-  port:
+  port: ${REST_SERVICE_PORT}
+
+# Настройка параметров шифрования
+ciphering:
+  key: ${CIPHERING_KEY}
+
+# Параметры для обработки входящих запросов и перенаправления их на другие сервисы
+url_components:
+  message_handler:
+    domain: ${MESSAGE_HANDLER_HOSTNAME}
+    port: ${MESSAGE_HANDLER_PORT}
 
 # Настройка логирования
 logging:
   level:
     org.springframework: ERROR
     org.telegram: ERROR
-    ru.zerrbild: DEBUG
+    ru.zerrbild: ERROR
   pattern:
     console: "%d %highlight(%5level) %clr(${PID}){magenta} --- [%17.17t] %clr(%-40logger{36}){cyan} :: %clr(%-30.30method){yellow} : %msg%n"
     file: "%d %5p ${PID} --- [%t] %-60c{1.} : %m%n"
   file:
-    name: ./logs/rest-service.log
-
-# Настройка RabbitMQ
-spring:
-  # Настройка соединения с базой данных Postgres
-  datasource:
-    username:
-    password:
-    url:
-  jpa:
-    generate-ddl: true
-    show-sql: true
-
-link:
-  decryption_key:
-  protocol:
-  address:
-  port:
-    message_handler:
+    name: ./sharing-bot-logs/rest-service.log

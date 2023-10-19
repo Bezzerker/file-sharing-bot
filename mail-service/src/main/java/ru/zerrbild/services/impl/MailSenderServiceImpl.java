@@ -15,12 +15,8 @@ import ru.zerrbild.utils.mail.EmailAddresseeData;
 public class MailSenderServiceImpl implements MailSenderService {
     @Value("${telegram.bot.name}")
     private String botName;
-    @Value("${link.protocol}")
-    private String protocol;
-    @Value("${link.address}")
-    private String address;
-    @Value("${link.port.rest_service}")
-    private String port;
+    @Value("${url_components.main_site.domain}")
+    private String mainSiteDomain;
     @Value("${spring.mail.username}")
     private String senderEmail;
     private final JavaMailSender mailSender;
@@ -31,7 +27,7 @@ public class MailSenderServiceImpl implements MailSenderService {
         mailMessage.setTo(addresseeData.getEmail());
         mailMessage.setFrom(senderEmail);
         mailMessage.setSubject(String.format("%s — Подтверждение электронной почты", botName));
-        var confirmationLink=String.format("%s://%s:%s/mail/confirmation?userId=", protocol, address, port);
+        var confirmationLink=String.format("https://%s/email/confirmation?userId=", mainSiteDomain);
 
         var sentMessage = String.format("""
                         %s, перейдите по ссылке, чтобы подтвердить адрес электронной почты и завершить регистрацию в боте — %s%s

@@ -18,27 +18,32 @@ public class RabbitMQConfiguration {
     }
 
     @Bean
-    public Queue textQueue(@Value("${rabbitmq.queue.text}") String queueName) {
+    public Queue textQueue(@Value("${rabbitmq.exchanges.message.queues.text.name}") String queueName) {
         return new Queue(queueName);
     }
 
     @Bean
-    public Queue documentQueue(@Value("${rabbitmq.queue.document}") String queueName) {
+    public Queue documentQueue(@Value("${rabbitmq.exchanges.message.queues.document.name}") String queueName) {
         return new Queue(queueName);
     }
 
     @Bean
-    public Queue imageQueue(@Value("${rabbitmq.queue.image}") String queueName) {
+    public Queue imageQueue(@Value("${rabbitmq.exchanges.message.queues.image.name}") String queueName) {
         return new Queue(queueName);
     }
 
     @Bean
-    public TopicExchange messageExchange(@Value("${rabbitmq.exchange.name}") String exchange) {
+    public Queue responseQueue(@Value("${rabbitmq.exchanges.message.queues.response.name}") String queueName) {
+        return new Queue(queueName);
+    }
+
+    @Bean
+    public TopicExchange messageExchange(@Value("${rabbitmq.exchanges.message.name}") String exchange) {
         return new TopicExchange(exchange);
     }
 
     @Bean
-    public Binding textBinding(@Value("${rabbitmq.exchange.routing_key.to_text_queue}") String routingKey,
+    public Binding textBinding(@Value("${rabbitmq.exchanges.message.queues.text.routing_key}") String routingKey,
                                Queue textQueue,
                                TopicExchange messageExchange) {
         return BindingBuilder
@@ -48,7 +53,7 @@ public class RabbitMQConfiguration {
     }
 
     @Bean
-    public Binding documentBinding(@Value("${rabbitmq.exchange.routing_key.to_document_queue}") String routingKey,
+    public Binding documentBinding(@Value("${rabbitmq.exchanges.message.queues.document.routing_key}") String routingKey,
                                    Queue documentQueue,
                                    TopicExchange messageExchange) {
         return BindingBuilder
@@ -58,11 +63,21 @@ public class RabbitMQConfiguration {
     }
 
     @Bean
-    public Binding imageBinding(@Value("${rabbitmq.exchange.routing_key.to_image_queue}") String routingKey,
+    public Binding imageBinding(@Value("${rabbitmq.exchanges.message.queues.image.routing_key}") String routingKey,
                                 Queue imageQueue,
                                 TopicExchange messageExchange) {
         return BindingBuilder
                 .bind(imageQueue)
+                .to(messageExchange)
+                .with(routingKey);
+    }
+
+    @Bean
+    public Binding responseBinding(@Value("${rabbitmq.exchanges.message.queues.response.routing_key}") String routingKey,
+                                Queue responseQueue,
+                                TopicExchange messageExchange) {
+        return BindingBuilder
+                .bind(responseQueue)
                 .to(messageExchange)
                 .with(routingKey);
     }

@@ -5,15 +5,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.zerrbild.exceptions.RegisteredUserNotFoundException;
+import ru.zerrbild.exceptions.RequestedFileNotFoundException;
 import ru.zerrbild.utils.ciphering.exceptions.IncorrectCiphertextException;
 import ru.zerrbild.utils.ciphering.exceptions.IncorrectKeyException;
-
-import java.util.NoSuchElementException;
 
 @Slf4j
 @RestControllerAdvice
 public class ExceptionControllerAdvice {
-    @ExceptionHandler(value = {IncorrectCiphertextException.class, NoSuchElementException.class})
+    @ExceptionHandler(value = {IncorrectCiphertextException.class, RequestedFileNotFoundException.class})
     public ResponseEntity<String> handleInvalidAddressExceptions() {
         return ResponseEntity.badRequest().body("Требуемый ресурс не найден!");
     }
@@ -26,6 +25,6 @@ public class ExceptionControllerAdvice {
     @ExceptionHandler(RegisteredUserNotFoundException.class)
     public ResponseEntity<String> handleRegisteredUserNotFoundException(RuntimeException exception) {
         log.info(exception.getMessage());
-        return ResponseEntity.badRequest().body("Ссылка недействительна!");
+        return ResponseEntity.badRequest().body("Ссылка подтверждения учётной записи недействительна!");
     }
 }

@@ -1,69 +1,81 @@
-# Настройки сервера
-server:
-  port:
-
 spring:
+  profiles:
+    active: default
   # Настройка RabbitMQ
   rabbitmq:
-    host: localhost
-    port:
-    username:
-    password:
-    virtual-host:
+    host: ${RABBITMQ_HOSTNAME}
+    port: 5672
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: file_sharing_bot
   # Настройка соединения с базой данных Postgres
   datasource:
-    username:
-    password:
-    url:
-  jpa:
-    generate-ddl: true
-    show-sql: true
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+    url: ${POSTGRES_URL}
+
+# Настройки сервера
+server:
+  port: ${MESSAGE_HANDLER_PORT}
+
+# Ссылки для получения информации о файле и его скачивания c серверов Telegram
+telegram:
+  bot:
+    token: ${TELEGRAM_BOT_TOKEN}
+    admin_id: ${TELEGRAM_BOT_CREATOR_ID}
+  api_uri:
+    file_info: https://api.telegram.org/bot{token}/getFile?file_id={fileId}
+    file_download: https://api.telegram.org/file/bot{token}/{filePath}
+
+# Настройка параметров шифрования
+ciphering:
+  key: ${CIPHERING_KEY}
+
+# Настройка ссылок для обращений к другим сервисам, а также для генерации собственных
+url_components:
+  main_site:
+    domain: ${MAIN_DOMAIN}
+  mail_service:
+    domain: ${MAIL_SERVICE_HOSTNAME}
+    port: ${MAIL_SERVICE_PORT}
 
 # Настройка логирования
 logging:
   level:
     org.springframework: ERROR
     org.telegram: ERROR
-    ru.zerrbild: DEBUG
+    ru.zerrbild: ERROR
   pattern:
     console: "%d %highlight(%5level) %clr(${PID}){magenta} --- [%17.17t] %clr(%-40logger{36}){cyan} :: %clr(%-30.30method){yellow} : %msg%n"
     file: "%d %5p ${PID} --- [%t] %-60c{1.} : %m%n"
   file:
-    name: ./logs/message-handler.log
+    name: ./sharing-bot-logs/message-handler.log
 
 # Названия очередей, обменов и связываний
 rabbitmq:
-  queue:
-    text: text
-    document: document
-    image: image
-    response: response
-    registrants:
-      name: registrants
-      ttl: 3600000
-    deregister_candidates: deregister_candidates
-  exchange:
+  exchanges:
     message:
       name: message
-      routing_key:
-        to_response_queue: response
+      queues:
+        text:
+          name: text
+          routing_key: text
+        document:
+          name: document
+          routing_key: document
+        image:
+          name: image
+          routing_key: image
+        response:
+          name: response
+          routing_key: response
     user:
       name: user
-      routing_key:
-        to_registrants_queue: registrants
-        to_deregister_candidates_queue: candidates
-# Ссылки для получения информации о файле и его скачивания c серверов Telegram
-telegram:
-  bot_token:
-  bot_creator_id:
-  uri:
-    file_info: https://api.telegram.org/bot{token}/getFile?file_id={fileId}
-    file_download: https://api.telegram.org/file/bot{token}/{filePath}
-
-link:
-  protocol:
-  address:
-  encryption_key:
-  port:
-    rest_service:
-    mail_service:
+      queues:
+        registrants:
+          name: registrants
+          routing_key: registrants
+          ttl: 3600000
+        deregister_candidates:
+          name: deregister_candidates
+          routing_key: candidates

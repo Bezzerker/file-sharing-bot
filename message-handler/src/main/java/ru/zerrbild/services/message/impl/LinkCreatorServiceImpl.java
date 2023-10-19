@@ -13,20 +13,16 @@ import ru.zerrbild.utils.ciphering.exceptions.IncorrectKeyException;
 @RequiredArgsConstructor
 @Service
 public class LinkCreatorServiceImpl implements LinkCreatorService {
-    @Value("${link.protocol}")
-    private String protocol;
-    @Value("${link.address}")
-    private String address;
-    @Value("${link.port.rest_service}")
-    private String restServicePort;
-    @Value("${link.encryption_key}")
-    private String key;
+    @Value("${url_components.main_site.domain}")
+    private String mainSiteDomain;
+    @Value("${ciphering.key}")
+    private String encodingKey;
     private final Encoder encoder;
 
     public String createDownloadLink(Long id, LinkType type) {
         try {
-            String encodedIdUrlParam = encoder.encodeForUrl(id, key);
-            return String.format("%s://%s:%s/file/%s?id=%s", protocol, address, restServicePort, type, encodedIdUrlParam);
+            String encodedIdUrlParam = encoder.encodeForUrl(id, encodingKey);
+            return String.format("https://%s/files/%s?id=%s", mainSiteDomain, type, encodedIdUrlParam);
         } catch (IncorrectKeyException e) {
             log.error(e.getMessage());
             return "Произошла внутренняя ошибка!";

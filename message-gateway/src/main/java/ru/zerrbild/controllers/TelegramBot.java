@@ -10,8 +10,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Slf4j
 @Controller
 public class TelegramBot extends TelegramLongPollingBot {
-    @Value("${bot.username}")
-    private String botUsername;
+    @Value("${bot.name}")
+    private String botName;
     private final UpdateProcessor updateProcessor;
 
     protected TelegramBot(@Value("${bot.token}") String botToken,
@@ -27,7 +27,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return botUsername;
+        return botName;
     }
 
     @Override

@@ -24,17 +24,15 @@ import ru.zerrbild.utils.mail.EmailAddresseeData;
 @RequiredArgsConstructor
 @Service
 public class UserRegistrationManagementServiceImpl implements UserRegistrationManagementService {
-    @Value("${link.encryption_key}")
-    private String encryptionKey;
-    @Value("${link.protocol}")
-    private String protocol;
-    @Value("${link.address}")
-    private String address;
-    @Value("${link.port.mail_service}")
+    @Value("${ciphering.key}")
+    private String encodingKey;
+    @Value("${url_components.mail_service.domain}")
+    private String mailServiceDomain;
+    @Value("${url_components.mail_service.port}")
     private String mailServicePort;
-    @Value("${rabbitmq.exchange.user.name}")
+    @Value("${rabbitmq.exchanges.user.name}")
     private String userExchange;
-    @Value("${rabbitmq.exchange.user.routing_key.to_registrants_queue}")
+    @Value("${rabbitmq.exchanges.user.queues.registrants.routing_key}")
     private String registrantsQueueRoutingKey;
     private final Encoder encoder;
     private final RestTemplate restTemplate;
@@ -94,7 +92,7 @@ public class UserRegistrationManagementServiceImpl implements UserRegistrationMa
 
     private ResponseEntity<String> sendRequestToMailService(EmailAddresseeData addresseeData) {
         return restTemplate.exchange(
-                String.format("%s://%s:%s/mail/send", protocol, address, mailServicePort),
+                String.format("http://%s:%s/email/verification", mailServiceDomain, mailServicePort),
                 HttpMethod.POST,
                 new HttpEntity<>(addresseeData),
                 String.class
@@ -102,7 +100,7 @@ public class UserRegistrationManagementServiceImpl implements UserRegistrationMa
     }
 
     private EmailAddresseeData setAddresseeData(UserEntity user, String userEmail) {
-        String encodedIdForUrl = encoder.encodeForUrl(user.getId(), encryptionKey);
+        String encodedIdForUrl = encoder.encodeForUrl(user.getId(), encodingKey);
         return EmailAddresseeData.builder()
                 .id(encodedIdForUrl)
                 .firstName(user.getFirstName())

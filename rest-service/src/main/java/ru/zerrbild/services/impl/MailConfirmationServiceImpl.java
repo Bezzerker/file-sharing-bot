@@ -16,13 +16,11 @@ import ru.zerrbild.utils.ciphering.Decoder;
 @RequiredArgsConstructor
 @Service
 public class MailConfirmationServiceImpl implements MailConfirmationService {
-    @Value("${link.decryption_key}")
-    private String key;
-    @Value("${link.protocol}")
-    private String protocol;
-    @Value("${link.address}")
-    private String address;
-    @Value("${link.port.message_handler}")
+    @Value("${ciphering.key}")
+    private String decodingKey;
+    @Value("${url_components.message_handler.domain}")
+    private String messageHandlerDomain;
+    @Value("${url_components.message_handler.port}")
     private String messageHandlerServicePort;
     private final Decoder decoder;
     private final UserDAO userDAO;
@@ -30,7 +28,7 @@ public class MailConfirmationServiceImpl implements MailConfirmationService {
 
     @Override
     public void confirm(String encodedUserId) {
-        Long userId = decoder.decodeToLong(encodedUserId, key);
+        Long userId = decoder.decodeToLong(encodedUserId, decodingKey);
 
         UserEntity existingUser = userDAO.findById(userId)
                 .filter(user -> user.getState() == UserState.WAITING_FOR_CONFIRMATION)
@@ -44,7 +42,7 @@ public class MailConfirmationServiceImpl implements MailConfirmationService {
 
     private void sendConfirmationMessageToUser(UserEntity user) {
         restTemplate.exchange(
-                String.format("%s://%s:%s/telegram/confirm", protocol, address, messageHandlerServicePort),
+                String.format("http://%s:%s/notifications/registration/complete", messageHandlerDomain, messageHandlerServicePort),
                 HttpMethod.POST,
                 new HttpEntity<>(user.getTgUserId()),
                 String.class

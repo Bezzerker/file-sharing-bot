@@ -25,8 +25,8 @@ import ru.zerrbild.services.message.enums.MainCommand;
 @Slf4j
 @Service
 public class MessageManagerServiceImpl implements MessageManagerService {
-    @Value("${telegram.bot_creator_id}")
-    private Long telegramBotCreatorId;
+    @Value("${telegram.bot.admin_id}")
+    private Long telegramBotAdminId;
     private final NotificationService notificationService;
     private final DatabaseFileLoaderService databaseFileLoader;
     private final LinkCreatorService linkCreatorService;
@@ -173,7 +173,7 @@ public class MessageManagerServiceImpl implements MessageManagerService {
         return existingUserEntity.orElseGet(() -> {
             var userState = UserState.UNREGISTERED;
             var receivedUserId = user.getId();
-            if (receivedUserId.equals(telegramBotCreatorId)) {
+            if (receivedUserId.equals(telegramBotAdminId)) {
                 userState = UserState.REGISTERED;
                 notificationService.notifyUser(
                         user.getId(),

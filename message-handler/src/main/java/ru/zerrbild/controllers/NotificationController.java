@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.zerrbild.services.message.NotificationService;
 
 @RequiredArgsConstructor
-@RequestMapping("/telegram")
+@RequestMapping("/notifications")
 @RestController
 public class NotificationController {
     private final NotificationService notificationService;
 
-    @PostMapping("/confirm")
+    @PostMapping("/registration/complete")
     public ResponseEntity<String> notifyRegistrationCompletion(@RequestBody Long tgUserId) {
         notificationService.notifyRegistrationCompletion(tgUserId);
         return ResponseEntity.ok("Уведомление о завершении регистрации отправлено!");

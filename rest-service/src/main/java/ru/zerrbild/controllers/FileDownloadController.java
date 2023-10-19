@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("/file")
+@RequestMapping("/files")
 @RestController
 public class FileDownloadController {
     private final FileDataService fileDataService;

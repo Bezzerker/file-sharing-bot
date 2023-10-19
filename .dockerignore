@@ -1,0 +1,13 @@
+target/
+/logs/
+/.idea
+/.mvn
+
+*.md
+*.sh
+*.iml
+
+mvnw
+mvnw.cmd
+.gitignore
+.dockerignore
